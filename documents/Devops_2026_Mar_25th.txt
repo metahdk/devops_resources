@@ -1,0 +1,705 @@
+﻿In class Command history 
+For ref : 
+
+
+#######  Basic Git Operations #####
+
+
+  9  git --version
+   10  #sudo apt update && sudo apt install git -y 
+
+
+### create your own Public repository on Personal github account 
+⇒ 
+   11  git clone https://github.com/pavansw/fedility_devops_demo.git       #### update url ## change url with your repository URl
+### Using Vim editor or nano editor type some random text inside considering sample code or sample doc
+
+
+   12  ls
+   13  cd fedility_devops_demo
+   14  ls 
+   15  ls -lah 
+   16  history 
+   17  git logs
+   18  git log
+   19  vim sample.txt
+   20  vim app.py
+   21  ls
+   22  vim credentials.txt
+   23  ls
+   24  vim hello.py 
+   25  ls
+   26  echo "my document" > README.md
+   27  ls
+   28  touch .gitignore 
+   29  echo "credentials.txt" >> .gitignore 
+   30  cat .gitignore 
+   31  git add app.py README.md sample.txt 
+   32  git status
+   33  vim app.py 
+   34  git status
+   35  git commit -m "ProjectX started under Fedility" 
+   36  git config --global user.name pavansw
+   37  git config --global user.email pavansw@example.com
+   38  git commit -m "ProjectX started under Fedility" 
+   39  git status
+   40  ls
+   41  git log
+   42  git log --one-line
+   43  git log --oneline 
+   44  git push origin master
+   45  vim app.py 
+   46  vim README.md 
+   47  ls
+   48  git add app.py README.md 
+   49  git status
+   50  git commit -m "update as per last call with client on 23rd Mar 2026"
+   51  git push origin master 
+
+
+
+
+
+
+===============================================================
+### Jenkins Integration server  ####
+
+
+
+
+   81  systemctl status jenkins
+   86  vim jenkins.sh
+
+
+
+
+### installing Jenkins ref : https://www.jenkins.io/doc/book/installing/linux/#debianubuntu  
+### Install java
+sudo apt update
+sudo apt install fontconfig openjdk-21-jre
+java -version
+### Install Jenkins  ### Ater installing opne link in browser http://localhost:8080 
+sudo wget -O /etc/apt/keyrings/jenkins-keyring.asc \
+  https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
+echo "deb [signed-by=/etc/apt/keyrings/jenkins-keyring.asc]" \
+  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+sudo apt update
+sudo apt install jenkins -y
+sudo systemctl enable jenkins
+sudo systemctl start jenkins
+sudo systemctl status jenkins
+echo "Done with script of jenkins"
+
+
+
+
+   87  sudo sh jenkins.sh 
+   88  sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+   89  sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+
+
+
+Access Jenkins dashboard with 
+
+
+http://localhost:8080    in the browser of lab ubuntu server browser. 
+
+
+⇒  Select “install suggested plugins”
+⇒   at last it might ask you to create your admin account 
+⇒  create your personal account (dummy details can be there.)
+
+
+
+
+
+
+=====================================================
+
+
+### install Maven on ubuntu server using following commands 
+
+
+$ sudo apt install maven -y 
+
+
+$  maven -version
+
+
+======================================
+
+
+Example 1 : 
+In jenkins create pipeline job using following java project with maven build and Junit 
+
+
+https://github.com/pavansw/simpleMavenJunit.git  
+
+
+
+
+Maven target will be 
+
+
+In build step choose “Invoke top level maven target”
+
+
+clean compile test package
+
+
+=============================
+Example 2 : 
+In jenkins ConfigurePipeline Job 
+
+
+
+
+Using https://github.com/pavansw/JenkinsPipeline.git 
+
+
+==========================================
+
+
+### Example Pipeline code 
+
+
+pipeline {
+    agent any
+    stages {
+        stage ('SCM for Java Code') {
+            steps{
+                git changelog: false, url: 'https://github.com/pavansw/simpleMavenJunit.git'
+                echo 'Polling to Developers SCM'
+            }
+        }
+        stage ('Maven Compile') {
+            steps{
+                sh '''mvn clean
+mvn compile'''
+            }
+        }
+        stage ('Testing Code') {
+            steps {
+                sh '''mvn test'''
+                echo 'Testing complete with Junit on maven'
+
+
+            }
+        }
+        stage ('Package') {
+            steps {
+            sh 'mvn package'   
+            }
+        }
+        stage ('Publish Test results'){
+            steps {
+                
+    
+            junit 'target/surefire-reports/*.xml'
+            }
+        }
+        stage ('Execute Jar'){
+            steps{
+                sh 'java -jar target/*.jar'
+            }
+        }
+    }
+}
+========================================
+
+
+#######  Docker Installation On UBUNTU
+
+
+  152  curl -fsSL https://get.docker.com -o get-docker.sh
+  153  ls
+  154  sudo sh get-docker.sh
+ ==============
+169  systemctl status docker 
+  171  sudo docker version
+  
+====================
+### EXTRAS : Incase you get error in installing try following 
+
+
+ 165  sudo lsof /var/lib/dpkg/lock-frontend 
+⇒ note down the PID and kill that process forcefully with command (kill -9 <PID>) in mycase process id was 142009
+
+
+  166  sudo kill -9 142009
+  167  sudo lsof /var/lib/dpkg/lock-frontend 
+ ⇒  try to run installation command again
+
+
+## extras :   if error still there try following 
+1. Delete the lock files:
+sudo rm /var/lib/dpkg/lock-frontend
+sudo rm /var/lib/dpkg/lock
+2. sudo dpkg --configure -a
+3. sudo apt update
+========================================
+Lets give access of docker command to nonroot user we have loggedin with (in my case its lab-user)
+
+
+173  whoami
+  174  sudo usermod -aG docker lab-user
+  177  sudo setfacl -m u:lab-user:rwx /var/run/docker.sock 
+  175  sudo systemctl restart docker 
+  176  docker version
+  
+======================================
+### Lets try to create new container and access it with RHEL 9 container image (ubi9)
+====================================
+  180  docker images
+  181  docker pull docker.io/redhat/ubi9:latest
+  182  docker images
+  183  docker run -itd --name mycontainer1 redhat/ubi9:latest 
+  184  docker ps
+  185  docker ps -a
+  186  docker exec -it mycontainer1 ls / 
+  187  docker exec -it mycontainer1 bash 
+                        ls
+                        touch sample{1..10}
+                        ls
+                        exit
+
+
+
+
+  188  docker ps -a
+  189  docker stop mycontainer1 
+  190  docker ps -a
+  191  docker exec -it mycontainer1 bash 
+
+
+  192  docker start mycontainer1 
+  193  docker exec -it mycontainer1 bash 
+                        ls
+                        exit
+
+
+  194  docker stop mycontainer1 
+  195  docker ps -a
+  196  ps -ef | grep 8e1eec0f5138                  ### this is Container ID (different in your case)
+  197  docker start mycontainer1 
+  198  docker ps -a
+  199  ps -ef | grep 8e1eec0f5138
+
+
+================================================
+### Docker Networking 
+
+
+  
+
+  205  docker run -d --name webserver1 -p 18080:80  httpd:latest
+  206  docker ps -a
+  207  curl http://localhost:18080
+
+
+=================
+ 221  docker run -d -p 4545:8080 --name game1 pengbai/docker-supermario
+  222  docker ps -a
+
+
+⇒   access in browser with http://lcoalhost:4545
+================================================
+
+
+#####   Committing updated container to create image 
+ 225  docker ps
+  226  docker commit webserver3 myimage:1.0
+  227  docker images
+
+
+##### Sharing image locally /  Backup container image as tar file
+
+
+  228  docker save myimage:1.0 -o mywebserver.tar.gz
+  229  ls
+
+
+#### On destination machine copy the tar file and extract using following command 
+  230  #docker load -i mywebserver.tar.gz 
+
+
+
+
+##### How to upload image to container registry (docker.io in my case , pavansw is my user account name of docker.io)
+
+
+  232  docker images
+  233  docker tag myimage:1.0 docker.io/pavansw/myimage:1.0
+  234  docker images
+  235  docker login 
+  236  docker push docker.io/pavansw/myimage:1.0
+  235  docker logout
+
+
+⇒   check on Docker hub login 
+=================================================
+##### Building Docker images 
+Example 1 : 
+
+
+  238  mkdir example1/
+  239  cd example1/
+  242  vim webpage.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Flashing Text - Pavan Wankhade</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #222; /* Dark background to make colors pop */
+            font-family: Arial, sans-serif;
+        }
+        #flashing-text {
+            font-size: 3rem;
+            font-weight: bold;
+            transition: color 0.2s ease; /* Smoothes the color transition */
+        }
+    </style>
+</head>
+<body>
+
+
+    <h1 id="flashing-text">Hello I am Pavan Wankhade</h1>
+
+
+    <script>
+        const textElement = document.getElementById('flashing-text');
+        
+        // Function to generate a random hex color
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+
+        // Change color every 1000 milliseconds (1 second)
+        setInterval(() => {
+            textElement.style.color = getRandomColor();
+        }, 1000);
+    </script>
+
+
+</body>
+</html>
+ 
+-------------------------------------------
+  243  ls
+  244  vim Dockerfile
+FROM ubuntu:latest
+RUN apt update; apt install apache2 -y 
+COPY webpage.html /var/www/html/index.html
+EXPOSE 80/tcp
+CMD ["apache2ctl","-D","FOREGROUND"]
+
+
+----------------------------------------
+  251  docker build -t mywebserver:1.0 .
+  252  docker run -d --name testserver -p 4646:80 mywebserver:1.0 
+  253  docker ps
+Ref : https://docs.docker.com/reference/dockerfile/ 
+=============================================
+
+
+
+
+#### TRYING AWS Cloud services for Container services 
+
+
+Phase 1: IAM User Setup (In AWS Console)
+   1. Access Account: Log in with the root or admin credentials provided.
+   2. Create User: Go to IAM > Users > Create user.
+   * Name: container-admin
+   * Access: Check "Provide user access to the AWS Management Console".
+   3. Assign Policies: Select Attach policies directly and add these three:
+   * AdministratorAccess (As per your request to avoid nesting issues).
+   * AmazonEC2ContainerRegistryFullAccess
+   * AmazonECS_FullAccess
+Ref :   
+   4. Security Credentials: Once created, click on the user -> Security credentials tab -> Create access key -> Select Command Line Interface (CLI). Save the Access Key and Secret Key.
+________________
+
+
+Phase 2: Workstation Setup (Ubuntu Server)
+Install AWS CLI:
+Bash
+sudo apt update && sudo apt install awscli -y
+   1. Configure CLI:
+Bash
+aws configure
+# Use the Access Key and Secret Key from Phase 1
+# Default region: ap-southeast-2
+# Default output: json
+   2. ________________
+
+
+Phase 3: ECR & Docker (Building the Image)
+Create Repository:
+Bash
+aws ecr create-repository --repository-name my-web-app --region ap-southeast-2
+   1. Login to ECR:
+Bash
+aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin <YOUR_ACCOUNT_ID>.dkr.ecr.ap-southeast-2.amazonaws.com
+   2. Build Apache Image: Create a Dockerfile:
+vim Dockerfile
+
+
+FROM ubuntu:latest
+RUN apt-get update && apt-get install -y apache2
+ENV APACHE_RUN_USER www-data
+ENV APACHE_RUN_GROUP www-data
+ENV APACHE_LOG_DIR /var/log/apache2
+EXPOSE 80
+CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
+
+
+Build it:
+Bash
+
+docker build -t my-web-app .
+   3. Tag & Push:
+Bash
+
+docker tag my-web-app:latest <YOUR_ACCOUNT_ID>.dkr.ecr.ap-southeast-2.amazonaws.com/my-web-app:latest
+docker push <YOUR_ACCOUNT_ID>.dkr.ecr.ap-southeast-2.amazonaws.com/my-web-app:latest
+   4. ________________
+
+
+Phase 4: ECS Deployment (AWS Console)
+   1. Login: Log in to the Console as container-admin.
+   2. Create Cluster: Go to ECS > Clusters > Create. Use the Fargate (Serverless) infrastructure. Name it demo-cluster.
+   3. Task Definition: * Name: web-task. Infrastructure: Fargate.
+   * Container details: Name it apache-container.
+   * Image URI: Paste your ECR URI from Phase 3.
+   * Port Mapping: 80 (HTTP).
+   4. Create Service: Inside demo-cluster, click Create under the Services tab.
+   * Select your web-task.
+   * Networking: Choose a VPC and Public Subnets.
+   * Public IP: Ensure it is toggled to Enabled.
+   * Security Group: Add an Inbound Rule for HTTP (Port 80) from 0.0.0.0/0.
+________________
+
+
+Phase 5: Verification & Cleanup
+   1. Access: Go to Cluster > Tasks > Click your running Task. Copy the Public IP and paste it into your browser.
+   2. Cleanup (Order matters):
+   * ECS Service: Update service -> Set "Desired Tasks" to 0. Then Delete the service.
+   * ECS Cluster: Delete the cluster.
+   * ECR: Delete the my-web-app repository (this also deletes the images).
+   3. Bash
+aws ecr delete-repository --repository-name my-web-app --force
+=========================================================
+
+
+##### Container with Microservices and Multitier Applications 
+
+
+⇒   On your Ubuntu workstation where docker is installed install Docker Compose and try multitier application deployment 
+
+
+⇒ Example Python Flask + redis 
+
+
+
+
+  327  sudo apt install docker-compose
+
+
+ 323  git clone https://github.com/pavansw/contanrizeApp.git
+  324  cd contanrizeApp/
+  325  ls
+  326  cat compose.yaml 
+  328  docker compose up -d 
+  329  docker ps
+  330  curl http://localhost:5000
+  331  docker compose ls
+  332  docker compose down 
+
+
+=================================
+
+
+TASK that you should try later: 
+Docker Compose 3-Tier Microservice
+
+
+https://docs.google.com/document/d/1CG8ttqXYqnhKHRhcNdWqTHfmIuuJDZBNqYEFeuKsF7Y/edit?usp=sharing 
+
+
+=========================================
+
+
+You can try Voting application as well : 
+https://github.com/dockersamples/example-voting-app/tree/main 
+https://github.com/dockersamples/example-voting-app/blob/main/docker-compose.yml 
+
+
+
+
+================================================
+
+
+#### Ansible steps for setup ###########
+## Use your UBUNTu cloudlab 
+
+
+
+
+⇒  Lets install Ansible
+
+
+ 341  sudo apt install ansible
+  342  ansible --version
+
+
+⇒ note down your servers IP address with ethernet connection
+ 
+  343  ip a
+
+
+⇒ check sshd service must be running
+
+
+  344  systemctl status sshd
+
+
+⇒ generate ssh key pair and copy public key to client(managed hosts) with any user account , I am using same machine same account like localhost
+
+
+  345  ssh-keygen 
+  346  cat /home/lab-user/.ssh/id_rsa.pub
+  347  ssh-copy-id lab-user@172.31.104.76 
+
+
+================================
+⇒ lets setup Ansible Configuration directory 
+
+
+
+
+  354  mkdir ansible
+  355  cd ansible/
+  356  vim myinventory
+## add your IP address here || add all IPs of all your remote hosts you want to automate
+172.31.104.76
+
+
+  358  ansible all -i myinventory --list-hosts
+  359  ansible all -i myinventory -m ping 
+  360  vim myplaybook1.yaml
+---
+ - name: play 1
+   hosts: all
+   become: yes
+   tasks: 
+     - name: adduser account samual
+       user: 
+           name: samual
+           state: present
+     - name: install tree software package
+       apt:
+           name: tree
+           state: latest
+
+
+==============================
+
+
+  361  ls
+  364  ansible-playbook -i myinventory myplaybook1.yaml -K
+  367  ansible-playbook -i myinventory myplaybook1.yaml -K 
+
+
+==============================
+Another example
+
+
+  371  vim myplaybook2.yaml 
+---
+ - name: play 1
+   hosts: all
+   tasks: 
+     - name: create folder
+       file: 
+          name: /tmp/abcd
+          state: directory
+
+
+=============================
+
+
+  372  ansible-playbook -i myinventory myplaybook2.yaml 
+  373  ls /tmp/
+
+
+==================================================
+
+
+######################################################################
+
+
+Ansible Integration with Jenkins
+#############################
+
+
+Login by Jenkins user as jenkins user need to have interactive shell access and Ansible access
+
+
+#### 
+sudo passwd jenkins 
+⇒  set password as “Welcome@123”
+####
+Lets setup Ansible directory
+
+
+ 385  sudo mkdir /myansible
+  386  sudo chown jenkins /myansible
+  387  sudo chown jenkins:jenkins /myansible
+  388  sudo cp ansible/* /myansible/
+  389  sudo chown jenkins:jenkins /myansible/*
+  390  ls -lah /myansible/
+
+
+### 
+Switch user account to jenkins 
+
+
+su - jenkins
+
+
+⇒    Run following 
+   4  ssh-keygen
+    5  ssh-copy-id jenkins@172.31.104.76
+    6  exit
+    7  ansible-playbook -i /myansible/myinventory /myansible/myplaybook2.yaml 
+    8  exit
+
+
+============================
+#### from Jenkins Dashboard 
+⇒  install Ansible plugin 
+⇒   Configure new freestyle project job 
+⇒   in Build step choose Ansible playbook 
+
+
+Ref :   
+==================================
+
+
+⇒ run the job
+⇒
